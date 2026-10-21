@@ -229,6 +229,21 @@ pub fn window_event(
                 }))
             }
         },
+        WindowEvent::PinchGesture { delta, phase, .. } => {
+            Some(Event::Mouse(mouse::Event::PinchGesture {
+                delta: delta as f32,
+                phase: gesture_phase(phase),
+            }))
+        }
+        WindowEvent::RotationGesture { delta, phase, .. } => {
+            Some(Event::Mouse(mouse::Event::RotationGesture {
+                delta,
+                phase: gesture_phase(phase),
+            }))
+        }
+        WindowEvent::DoubleTapGesture { .. } => {
+            Some(Event::Mouse(mouse::Event::SmartMagnify))
+        }
         // Ignore keyboard presses/releases during window focus/unfocus
         WindowEvent::KeyboardInput { is_synthetic, .. } if is_synthetic => None,
         WindowEvent::KeyboardInput { event, .. } => Some(Event::Keyboard({
@@ -1263,4 +1278,14 @@ pub fn ime_purpose(
 // See: https://en.wikipedia.org/wiki/Private_Use_Areas
 fn is_private_use(c: char) -> bool {
     ('\u{E000}'..='\u{F8FF}').contains(&c)
+}
+
+/// Converts a winit touch phase into an [`iced_core`] gesture phase.
+fn gesture_phase(phase: winit::event::TouchPhase) -> mouse::GesturePhase {
+    match phase {
+        winit::event::TouchPhase::Started => mouse::GesturePhase::Started,
+        winit::event::TouchPhase::Moved => mouse::GesturePhase::Moved,
+        winit::event::TouchPhase::Ended => mouse::GesturePhase::Ended,
+        winit::event::TouchPhase::Cancelled => mouse::GesturePhase::Cancelled,
+    }
 }
